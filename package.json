@@ -1,0 +1,20 @@
+{
+	"author": "Michel Legnered <michel.legnered@gmail.com> (http://github.com/antics)",
+	"name": "payson",
+	"description": "Module for integrating with the Swedish payment service Payson api.",
+	"version": "0.0",
+	"repository": {
+		"type": "git",
+		"url": "git://github.com:antics/payson.git"
+	},
+	"main": "./payson.js",
+	"engines": {
+		"node": ">=0.4.7"
+	},
+	"dependencies": {
+		"SOMETHING": "*"
+	},
+	"devDependencies": {
+		"SOMETHING": "*"
+	}
+}
