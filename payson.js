@@ -1,6 +1,8 @@
-
+var https = require('https');
 
 var options = {
+	// https://www.payson.se/integration/egen-integration
+	
 	//
 	// Information about the seller
 	//
@@ -41,3 +43,18 @@ var options = {
 	// 3: Money on Payson account
 	'PaymentMethod': '', // 20
 };
+
+exports.buy = function (opts, callback) {
+	var httpsopts = {
+		hostname: 'www.payson.se',
+		path: opts.test ?
+			'/testagent/default.aspx' :
+			'/merchant/default.aspx' 
+		method: 'POST'
+		
+	};
+
+	https.request(httpsopts, function (res) {
+
+	});
+}
