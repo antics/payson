@@ -1,60 +1,57 @@
-var https = require('https');
+var
+https = require('https'),
+querystring = require('querystring');
 
-var options = {
-	// https://www.payson.se/integration/egen-integration
+exports.pay = function (agentid, md5key, params, callback) {
+
+	params = querystring.stringify(params);
 	
-	//
-	// Information about the seller
-	//
-	'SellerEmail': '', // 50, obligatory
-
-	//
-	// Information about the buyer
-	//
-	'BuyerFirstName': '', // 70
-	'BuyerLastName': '', // 70
-
-	//
-	// Product information
-	//
-	'Description': '', // 200, oblig
-	'Cost': 0, // oblig
-	'ExtraCost': 0, // oblig
-
-	//
-	// Transaction data
-	//
-	'RefNr': '', // 50
-	'OkUrl': '', // 255, oblig, return url after purchase
-	'AgentId': 0, // oblig
-	'MD5': '', // oblig
-	'GuaranteeOffered': 1, // oblig, 1: off, 2: on
-
-	//
-	// Special
-	//
-	// Obligatory text on reciept if activated: "Observera att Payson AB
-	// kommer att stå som betalningsmottagare på ditt kontoutdrag."
-	'CustomReceipt': 'false', // set to true to show reciept on OkUrl
-
-	// 0: All payment methods
-	// 1: Cards (VISA/MasterCard)
-	// 2: Internet banks (SEB, Handelsbanken, Nordeaa, Swedbank)
-	// 3: Money on Payson account
-	'PaymentMethod': '', // 20
-};
-
-exports.buy = function (opts, callback) {
 	var httpsopts = {
-		hostname: 'www.payson.se',
-		path: opts.test ?
-			'/testagent/default.aspx' :
-			'/merchant/default.aspx' 
-		method: 'POST'
-		
+		hostname: 'api.payson.se',
+		path: '/1.0/Pay/',
+		method: 'POST',
+		headers: {
+			'PAYSON-SECURITY-USERID': agentid,
+			'PAYSON-SECURITY-PASSWORD': md5key,
+			'Content-Type': 'application/x-www-form-urlencoded',
+			'Content-Length': params.length
+		}
 	};
 
-	https.request(httpsopts, function (res) {
+	var req = https.request(httpsopts, function (res) {
+		var data = '';
 
+		res.setEncoding('utf-8');
+		
+		res.on('data', function (buffer) {
+			data += buffer;
+		})
+
+		res.on('end', function () {
+			var response = querystring.parse(data);
+
+			if (response['responseEnvelope.ack'] == 'SUCCESS') {
+				callback(null, {
+				   timestamp: response['responseEnvelope.timestamp'],
+				   token: response['TOKEN']
+			   });
+			}
+			else if (response['responseEnvelope.ack'] == 'FAILURE') {
+				callback({
+					timestamp: response['responseEnvelope.timestamp'],
+					id: response['errorList.error(0).errorId'],
+					message: response['errorList.error(0).message']
+				});
+			}
+		});
 	});
+
+	
+	req.on('error', function (e) {
+		console.error(e);
+	});
+
+	req.write(params);
+	req.end();
+
 }
